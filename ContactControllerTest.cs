@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -15,10 +16,13 @@ namespace ContactApp.Test
     {
         private Mock<IUnitOfWork> _unitOfWork;
         private Mock<IValidator<ContactViewModel>> _validator;
+        private Mock<ILogger<ContactController>> logger;
+
         public ContactControllerTest()
         {
             _unitOfWork = new Mock<IUnitOfWork>();
             _validator = new Mock<IValidator<ContactViewModel>>();
+            logger = new Mock<ILogger<ContactController>>();
 
         }
         [Fact]
@@ -30,7 +34,7 @@ namespace ContactApp.Test
             var validator = new ContactValidator();
 
             _unitOfWork.Setup(p => p.Contacts.GetByIdAsync(1)).ReturnsAsync(contactList[1]);
-            ContactController emp = new ContactController(_unitOfWork.Object, mapper,validator);
+            ContactController emp = new ContactController(_unitOfWork.Object, mapper,validator,logger.Object);
 
             // Act
             var result = await emp.GetContact(1);
@@ -48,7 +52,7 @@ namespace ContactApp.Test
 
             _unitOfWork.Setup(repo => repo.Contacts.GetAll())
                 .Returns(TestHelperClass.GetTestContacts());
-            ContactController emp = new ContactController(_unitOfWork.Object,mapper,validator);
+            ContactController emp = new ContactController(_unitOfWork.Object,mapper,validator,logger.Object);
 
             // Act
             var result = emp.GetContacts();
@@ -71,7 +75,7 @@ namespace ContactApp.Test
             var validator = new ContactValidator();
             _unitOfWork.Setup(p => p.Contacts.AddAsync(contactList[1]));
 
-            var controller = new ContactController(_unitOfWork.Object,mapper,validator);
+            var controller = new ContactController(_unitOfWork.Object,mapper,validator,logger.Object);
 
            
             // Act
@@ -90,7 +94,7 @@ namespace ContactApp.Test
             var contactList = TestHelperClass.GetTestContacts();
 
             _unitOfWork.Setup(repo => repo.Contacts.Remove(contactList[1]));
-            var controller = new ContactController(_unitOfWork.Object,mapper,validator);
+            var controller = new ContactController(_unitOfWork.Object,mapper,validator,logger.Object);
 
             // Act
             await controller.DeleteContact(2);
